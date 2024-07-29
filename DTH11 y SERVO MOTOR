@@ -1,0 +1,40 @@
+//Incluimos las librerias
+#include "DHTesp.h"
+#include <ESP32Servo.h>
+//Declaramos las variables
+int pinDHT = 19;
+int servoPin = 18; // Pin al que está conectado el servomotor
+DHTesp dht;
+Servo myServo;
+int currentAngle = 0; // Ángulo actual del servomotor
+int targetAngle = 0; // Ángulo objetivo del servomotor
+int angleStep = 5; // Incremento/decremento del ángulo en cada paso
+void setup() {
+ Serial.begin(115200);
+ dht.setup(pinDHT, DHTesp::DHT11);
+ myServo.attach(servoPin); // Inicializamos el servomotor
+}
+void loop() {
+ //Obtenemos el arreglo de datos (humedad y temperatura)
+ TempAndHumidity data = dht.getTempAndHumidity();
+ //Mostramos los datos de la temperatura y humedad
+ Serial.println("Temperatura: " + String(data.temperature, 2) + "°C");
+ Serial.println("Humedad: " + String(data.humidity, 1) + "%");
+ Serial.println("---");
+ // Determina el ángulo objetivo del servomotor
+ if (data.temperature > 25 && data.humidity < 40) { // Ejemplo: mueve el servomotor si la
+temperatura supera 25°C y la humedad es menor al 40%
+ targetAngle = 90; // Ángulo objetivo: 90 grados
+ } else {
+ targetAngle = 0; // Ángulo objetivo: 0 grados
+ }
+ // Mueve el servomotor gradualmente hacia el ángulo objetivo
+ if (currentAngle < targetAngle) {
+ currentAngle += angleStep;
+ myServo.write(currentAngle);
+ } else if (currentAngle > targetAngle) {
+ currentAngle -= angleStep;
+ myServo.write(currentAngle);
+ }
+ delay(1000);
+}
